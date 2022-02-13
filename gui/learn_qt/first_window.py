@@ -10,7 +10,7 @@ class Example(QWidget):
         self.initUI()
 
     def initUI(self):
-        self.setGeometry(300,300,300,220)
+        self.setGeometry(300,300,300,660)
         self.setWindowTitle('Learning Emotion Recognition')
         self.setWindowIcon(QIcon(r'C:\Users\gray\Desktop\FacialEmotion\Facial-Emotion-Recognition\gui\image\icon.png'))
 
