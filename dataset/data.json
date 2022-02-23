@@ -1,0 +1,11 @@
+{
+  "文件名（注意，这里是写相对路径）": {
+    "image_h": 12,
+    "image_w": 23,
+    "boundingbox（这里切出来的人脸坐标）": [1,2,3,4,5,6,7,8],
+    "label": "undersatanding",
+    "feature_point(68个特征点)": [1,2,3,40],
+    "feature_distance(特征距离)": []
+
+  }
+}
