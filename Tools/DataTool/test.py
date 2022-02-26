@@ -74,8 +74,8 @@ def get_feature_point(
     return shape,iamge_size
 
 
-# 注意：下面的方法仅仅针对将原来已经有的文件生成json文件的方法
-def gen_json_item_old(
+# 上传图片生成json文件
+def gen_json_item_image(
         file_path:str,
         file_prefix:str
 ):
@@ -88,55 +88,68 @@ def gen_json_item_old(
         "label": "undersatanding",
         "feature_point(68个特征点)": [1,2,3,40],
         "feature_distance(特征距离)": []
-    将获取的图片，根据图片的信息生成对应json信息，如果当前暂时为空置为none
+
+    给出当前的图片所在文件夹的路径，默认是在当前文件中生成json文件
     :param
-        file_prefix:当前项目所在的目录
-        file_path:当前图片在当前项目中目录，从dataset开始
+        file_prefix:项目在当前的主机中的绝对位置
+        file_path:图片所在的文件所在当前项目中的位置
     :return:对应单条字典对，key：value
     '''
 
-    # 生成默认的字典
-    file = file_prefix+file_path
-    key_file = file.replace('C:\\Users\\gray\\Desktop\\','')
-    result = {key_file:{
-        "recognition":0,
-        "image_size":(0,0),
-        "boundingbox": [],
-        "label": "undersatanding",
-        "feature_point": [],
-        "feature_distance": 0
-         }
-    }
+    # 声明result_all保存所有值
+    result_all = dict()
 
-    # 文件名称确定对应的label
-    label = file.split('\\')[-2]
-    result[key_file]['label'] = label
+    # 读取当前项目中的所有图片
+    file_path_absolute = os.path.join(file_prefix,file_path)
+    for file_path,dir_name,file_names in os.walk(file_path_absolute):
+        for file in file_names:
+            if file.endswith('.jpg'):
 
-    # 获取脸部bounding box和特征点,注意，这里需要将ndarray转成list，才能保存为json文件
-    shape,image_size = get_feature_point(file)
+                # 获取文件相对路径，作为key保存
+                key_file = os.path.join(file_path,file).replace(file_prefix,'')
 
-    # 判定是否识别出对应脸部信息
-    if len(shape) == 0:
-        result[key_file]["recognition"] = 0
-    else:
-        result[key_file]["recognition"] = 1
-        result[key_file]['feature_point'] = shape.tolist()
-        result[key_file]['image_size'] = image_size
-    # 根据shape获取脸部边框
-        x_y_min = np.min(shape,axis = 0)
-        x_y_max = np.max(shape,axis = 0)
-        x_min = int(max(x_y_min[0]-10,0))
-        y_min = int(max(x_y_min[1]-10,0))
-        x_max = int(min(x_y_max[0]+10,image_size[0]))
-        y_max = int(min(x_y_max[1]+10,image_size[1]))
-        boundingbox = [[x_min,y_min],[x_min,y_max],[x_max,y_max],[x_max,y_max]]
-        result[key_file]["boundingbox"] = boundingbox
+                # 声名新的key-value键值对
+                result = {key_file:{
+                    "recognition":0,
+                    "image_size":(0,0),
+                    "boundingbox": [],
+                    "label": "undersatanding",
+                    "feature_point": [],
+                    "feature_distance": 0
+                     }
+                }
 
-        # 计算特征距离
-        result[key_file]["feature_distance"] = 0
+                # 获取脸部bounding box和特征点
+                shape,image_size = get_feature_point(os.path.join(file_path,file))
+                result[key_file]['feature_point'] = shape.tolist()
+                result[key_file]['image_size'] = image_size
 
-    # 返回最终标定结果
-    return result
+                # 判定是否识别出对应脸部信息
+                if len(shape) == 0:
+                    result[key_file]["recognition"] = 0
+                else:
+                    result[key_file]["recognition"] = 1
+                # 根据shape获取脸部边框
+                    x_y_min = np.min(shape,axis = 0)
+                    x_y_max = np.max(shape,axis = 0)
+                    x_min = int(max(x_y_min[0]-10,0))
+                    y_min = int(max(x_y_min[1]-10,0))
+                    x_max = int(min(x_y_max[0]+10,image_size[0]))
+                    y_max = int(min(x_y_max[1]+10,image_size[1]))
+                    boundingbox = [[x_min,y_min],[x_min,y_max],[x_max,y_max],[x_max,y_max]]
+                    result[key_file]["boundingbox"] = boundingbox
+
+                    # 计算特征距离
+                    result[key_file]["feature_distance"] = 0
+            # 合并所有的字典
+            result_all.update(result)
+
+    # 在图片所在文件中保存对应路径
+    json_path = os.path.join(file_prefix,file_path)
+    json_path = json_path+'\\image.json'
+    save_json(result_all,json_path)
+
+    print("保存完成")
 
 def save_json(source_dict,target_json):
     '''
@@ -151,26 +164,6 @@ def save_json(source_dict,target_json):
 
 if __name__ == '__main__':
     # 遍历当前图片下的所有文件,生成统一的json文件
-    result = dict()
-    # file_path = r"C:\Users\gray\Desktop\FacialEmotion\Facial-Emotion-Recognition\dataset\Label2\dataset\understanding"
-    file_path = r"C:\Users\gray\Desktop\FacialEmotion\Facial-Emotion-Recognition\dataset"
-    for path_prefix,dirnames,filenames in os.walk(file_path):
-        for file in filenames:
-            if file.endswith('.jpg'):
-                print(file)
-                print(path_prefix)
-                if not path_prefix.endswith('\\'):
-                    path_prefix += '\\'
-                temp = gen_json_item_old(file,path_prefix)
-                result.update(temp)
-
-    # 将生成json文件进行保存
-    target_json = r"C:\Users\gray\Desktop\FacialEmotion\Facial-Emotion-Recognition\dataset\data.json"
-    save_json(result,target_json)
-    # file_prefix = r"C:\Users\gray\Desktop\FacialEmotion\Facial-Emotion-Recognition"
-    # file_path = "\\dataset\\Label1\\dataset\\distracted\\25.jpg"
-    # print(gen_json_item(file_path,file_prefix))
-    #
 
 
 

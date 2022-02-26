@@ -34,7 +34,7 @@ def eye_aspect_ratio(eye):
 
 # define the path of the video you will process
 # the path of the face detector
-pathPedictor = r"C:\Users\gray\Desktop\FacialEmotionRecognition\shape_predictor_68_face_landmarks.dat"
+pathPedictor = r"C:\Users\gray\Desktop\FacialEmotion\Facial-Emotion-Recognition\Tools\DataTool\shape_predictor_68_face_landmarks.dat"
 
 # the path of alarm video
 pathAlarm = "C:\\Users\\gray\\Desktop\\FacialEmotionRecognition\\alarm.wav"

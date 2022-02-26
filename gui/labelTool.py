@@ -1,7 +1,18 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+"""
+图片的标定工具，将图片标定为基本的物种表情
+
+Author: Gray_Gl
+Last edited: February  2022
+"""
+
 import sys
 # 同时引入多个包，一定要带逗号
 # QDesktopWidget提供了用户桌面信息，包括屏幕的大小
-from PyQt5.QtWidgets import (QApplication, QWidget, QToolTip, QPushButton,QMessageBox, QDesktopWidget)
+from PyQt5.QtWidgets import (QApplication, QWidget, QToolTip, QPushButton, QMessageBox, QDesktopWidget, QGridLayout,
+                             QTextEdit)
 # 增加窗口的图标的显示
 from PyQt5.QtGui import QIcon,QFont
 # 导入相关事件和信息槽宝
@@ -15,35 +26,39 @@ class Example(QWidget):
 
 
     def initUI(self):
+        '''
+        设置页面的布局，并显示
+        :return:
+        '''
 
-        # 样例六，窗口剧中
+        # 声明五种基本的情绪
+        emotion = ['listening','understanding','tired','discreted','unknown']
+        emotion_button = []
+        for i in emotion:
+            temp = QPushButton(i)
+            temp.clicked.connect(self.buttonClicked)
+            emotion_button.append(temp)
 
-        # 样例，设置退出按钮
+        # 设置退出和导入按钮
         # 退出按钮设置，了解singles和slot的机制
-        qbtn = QPushButton('Quit', self)
-        # connect指定按下按钮的事件
-        # QCoreApplication包含了事件的主循环，能够添加和删除所有事件
-        # instance创建QCoreApplication的一个实例
-        # 将点击事件和能终止进程并退出应用的quit函数绑定在一起
-        # 在发送者和接收者之间建立通讯
-        qbtn.clicked.connect(QCoreApplication.instance().quit)
-        qbtn.resize(qbtn.sizeHint())
-        qbtn.move(50, 80)
+        quit_button = QPushButton('Quit')
+        import_button = QPushButton('import')
 
+        # 设置显示图片的工具
+        image_show = QTextEdit()
+
+        # 设置布局grid
+        grid = QGridLayout()
+        grid.setSpacing(10)
+
+        # 添加对应控件
+        grid.addWidget(image_show,1,0,6,6)
+        for i in range(len(emotion_button)):
+            grid.addWidget(emotion_button[i],2,i)
+        grid.addWidget(import_button,3,0)
+        grid.addWidget(import_button,3,1)
         # 样例  设置空间的提示信息
-        # 这是提示框的字体和大小
-        QToolTip.setFont(QFont('SansSerif',10))
-
-        # 创建提示框，是widget的提示内容，同时可以使用富文本编辑器
-        self.setToolTip('This is a <b>QWidget</b> widget')
-
-        # 创建按键并设置按键提示信息,同时指定按钮所属的父类控件
-        # 注意，没有父级的组建都是顶级窗口
-        btn = QPushButton('确认',self)
-        btn.setToolTip('This is a <b>QPushButton</b> widget')
-        # 调整按钮的大小，并移动位置，sizeHint是默认按钮大小
-        btn.resize(btn.sizeHint())
-        btn.move(50,50)
+        self.setLayout(grid)
 
         # 设置窗口的位置并设置大小，先是坐标，再是大小
         self.setGeometry(300,300,600,660)
@@ -52,6 +67,14 @@ class Example(QWidget):
         self.setWindowIcon(QIcon(r'C:\Users\gray\Desktop\FacialEmotion\Facial-Emotion-Recognition\gui\image\icon.png'))
 
         self.show()
+
+    def buttonClicked(self):
+        '''
+        按钮点击事件，获取按钮的信息，获取下一个图片，并将当前的按钮信息写入到字典中
+        :return:
+        '''
+        sender = self.sender()
+        print(sender.text())
 
     def center(self):
         '''
