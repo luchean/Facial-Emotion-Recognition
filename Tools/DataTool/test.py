@@ -164,7 +164,8 @@ def save_json(source_dict,target_json):
 
 if __name__ == '__main__':
     # 遍历当前图片下的所有文件,生成统一的json文件
-
+    file_path = r'dataset/Label3/new'
+    file_prefix = r''
 
 
 
