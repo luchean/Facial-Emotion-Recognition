@@ -104,7 +104,7 @@ def gen_json_item_image(
     for file_path,dir_name,file_names in os.walk(file_path_absolute):
         for file in file_names:
             if file.endswith('.jpg'):
-
+                print(file)
                 # 获取文件相对路径，作为key保存
                 key_file = os.path.join(file_path,file).replace(file_prefix,'')
 
@@ -149,7 +149,7 @@ def gen_json_item_image(
     json_path = json_path+'\\image.json'
     save_json(result_all,json_path)
 
-    print("保存完成")
+
 
 def save_json(source_dict,target_json):
     '''
@@ -165,9 +165,8 @@ def save_json(source_dict,target_json):
 if __name__ == '__main__':
     # 遍历当前图片下的所有文件,生成统一的json文件
     file_path = r'dataset/Label3/new'
-    file_prefix = r''
-
-
+    file_prefix = r'C:\Users\gray\Desktop\FacialEmotion\Facial-Emotion-Recognition'
+    gen_json_item_image(file_path,file_prefix)
 
 
 
