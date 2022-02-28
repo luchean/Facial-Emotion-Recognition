@@ -121,26 +121,26 @@ def gen_json_item_image(
 
                 # 获取脸部bounding box和特征点
                 shape,image_size = get_feature_point(os.path.join(file_path,file))
-                result[key_file]['feature_point'] = shape.tolist()
-                result[key_file]['image_size'] = image_size
-
                 # 判定是否识别出对应脸部信息
                 if len(shape) == 0:
                     result[key_file]["recognition"] = 0
                 else:
                     result[key_file]["recognition"] = 1
-                # 根据shape获取脸部边框
-                    x_y_min = np.min(shape,axis = 0)
-                    x_y_max = np.max(shape,axis = 0)
-                    x_min = int(max(x_y_min[0]-10,0))
-                    y_min = int(max(x_y_min[1]-10,0))
-                    x_max = int(min(x_y_max[0]+10,image_size[0]))
-                    y_max = int(min(x_y_max[1]+10,image_size[1]))
-                    boundingbox = [[x_min,y_min],[x_min,y_max],[x_max,y_max],[x_max,y_max]]
+                    result[key_file]['feature_point'] = shape.tolist()
+                    result[key_file]['image_size'] = image_size
+                    # 根据shape获取脸部边框
+                    x_y_min = np.min(shape, axis=0)
+                    x_y_max = np.max(shape, axis=0)
+                    x_min = int(max(x_y_min[0] - 10, 0))
+                    y_min = int(max(x_y_min[1] - 10, 0))
+                    x_max = int(min(x_y_max[0] + 10, image_size[0]))
+                    y_max = int(min(x_y_max[1] + 10, image_size[1]))
+                    boundingbox = [[x_min, y_min], [x_min, y_max], [x_max, y_max], [x_max, y_max]]
                     result[key_file]["boundingbox"] = boundingbox
 
                     # 计算特征距离
                     result[key_file]["feature_distance"] = 0
+
             # 合并所有的字典
             result_all.update(result)
 
