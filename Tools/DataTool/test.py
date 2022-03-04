@@ -8,6 +8,9 @@
 Author: Gray_Gl
 Last edited: February  2022
 """
+import time
+from random import random
+
 from PIL import Image
 import json
 import os
@@ -18,12 +21,53 @@ import imutils
 import cv2
 
 # 加载与训练人脸检测的CNN模型
+from imutils.video import VideoStream
+
 cnn_face_model = r"mmod_human_face_detector.dat"
 cnn_face_detector = dlib.cnn_face_detection_model_v1(cnn_face_model)
 
 # 加载人脸关键点检测模型
 predictor_path = "shape_predictor_68_face_landmarks.dat"
 predictor = dlib.shape_predictor(predictor_path)
+
+
+
+def save_json(source_dict,target_json):
+    '''
+    将source_dict保存到target_json对应路径中,将原来的文件进行覆盖
+    :param source_dict:
+    :param target_json:
+    :return:
+    '''
+    with open(target_json,'w+') as f:
+        json.dump(source_dict,f)
+
+
+def sample_json(
+        source_json:str,
+        nums:int
+):
+    '''
+    从source_json中随即提取特定数量num的样例，重命名在原来的路径中生成新json文件
+    :param source_json:
+    :param nums:
+    :return:
+    '''
+
+    # 打开json文件，并生成字典
+    all_item = dict()
+    with open(source_json,'r') as f:
+        all_item = json.loads(f)
+
+    # 对字典进行随机抽样
+    keys = random.sample(list(all_item), nums)
+    values = [all_item[k] for k in keys]
+    result = dict(zip(keys, values))
+
+    # 将结果在原来的位置进行保存
+    target_json = source_json.split('.')[0] + '-' +str(nums) + '.json'
+    save_json(target_json,result)
+
 
 
 def get_feature_point(
@@ -150,24 +194,100 @@ def gen_json_item_image(
     save_json(result_all,json_path)
 
 
-
-def save_json(source_dict,target_json):
+# 上传图片生成json文件
+def gen_json_item_realtime(
+        file_path:str,
+        file_prefix:str,
+        target_file:str
+):
     '''
-    将source_dict保存到target_json对应路径中,将原来的文件进行覆盖
-    :param source_dict:
-    :param target_json:
+    对应json格式：
+        "文件名（注意，这里是写相对路径）": {
+        "recognition":0/1(0表示当前图片并没有被识别出来，1表示当前图片已经被识别出来)
+        "image_size": (w,h)
+        "boundingbox（这里切出来的人脸坐标）": [1,2,3,4,5,6,7,8],
+        "label": "undersatanding",
+        "feature_point(68个特征点)": [1,2,3,40],
+        "feature_distance(特征距离)": []
+
+    根据视频提取的关键帧，并计算对应特征点欧氏距离的和余弦距离，然后选取关键帧进行保存
+
+    :param
+        file_prefix:项目在当前的主机中的绝对位置
+        file_path:图片所在的文件所在当前项目中的位置
+        target_file:最终输出的目标文件夹
+    :return:对应单条字典对，key：value
+    '''
+
+    # 加载openCV的级联检测分类器，用来判定人脸是否存在
+    # 加载预训练好的模型
+    # detector = cv2.CascadeClassifier(r'Tools/DataTool/haarcascade_frontalface_default.xml')
+    detector = cv2.CascadeClassifier(r'haarcascade_frontalface_default.xml')
+
+    # 启动摄像头,并初始化计算帧的数量
+    print("[INFO] starting video stream...")
+    vs = VideoStream(src=0).start()
+    time.sleep(2.0)
+    total = 0
+
+    # 循环开始读取
+    while True:
+        # 从视频流中读取数据集并复制到特定的硬盘上，同时将帧调整大小
+        frame = vs.read()
+        orig = frame.copy()
+        frame = imutils.resize(frame,width = 400)
+
+        # 在灰度的帧中检测人脸
+        rects = detector.detectMultiScale(
+            cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), scaleFactor=1.1,
+            minNeighbors=5, minSize=(30, 30))
+
+        # 循环遍历人脸，并将之标记在帧上
+        # rects是bounding box
+        for (x,y,w,h) in rects:
+            # 对应的系数分别是：图片、起始点坐标、终点坐标、颜色、宽度
+            cv2.rectangle(frame,(x, y), (x + w, y + h), (0, 255, 0), 2)
+
+        # 将每一帧进行展示
+        cv2.imshow("Frame",frame)
+        key = cv2.waitKey(1) & 0xFF
+
+        # 如果按下
+        if key == ord("k"):
+            p = os.path.sep.join([target_file, "{}.png".format(
+                str(total).zfill(5))])
+            cv2.imwrite(p, orig)
+            total += 1
+
+        # 如果按下q，从循环中退出
+        elif key == ord("q"):
+            break
+
+    # print the total faces saved and do a bit of cleanup
+    print("[INFO] {} face images stored".format(total))
+    print("[INFO] cleaning up...")
+    cv2.destroyAllWindows()
+    vs.stop()
+
+def gen_json_item_video(
+        video_path:str,
+        json_path:str
+):
+    '''
+    读取视频的每一帧，生成json文档，保存特征距离和一一对应的关系
+    :param video_path: 需要处理的视频的路径
+    :param json_path: 需要保存的json文档的路径
     :return:
     '''
-    with open(target_json,'w+') as f:
-        json.dump(source_dict,f)
+    
 
 
 if __name__ == '__main__':
     # 遍历当前图片下的所有文件,生成统一的json文件
-    file_path = r'dataset/Label3/new'
-    file_prefix = r'C:\Users\gray\Desktop\FacialEmotion\Facial-Emotion-Recognition'
-    gen_json_item_image(file_path,file_prefix)
-
+    # file_path = r'dataset/Label3/new'
+    # file_prefix = r'C:\Users\gray\Desktop\FacialEmotion\Facial-Emotion-Recognition'
+    # gen_json_item_image(file_path,file_prefix)
+    gen_json_item_video_realtime('','',r'C:\Users\gray\Desktop\FacialEmotion\Facial-Emotion-Recognition\dataset\video')
 
 
 
