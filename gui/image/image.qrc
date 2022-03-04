@@ -1,0 +1,8 @@
+<RCC>
+  <qresource prefix="icons" lang="monkey">
+    <file>penguin.png</file>
+  </qresource>
+  <qresource prefix="icons" lang="penguin">
+    <file>monkey.png</file>
+  </qresource>
+</RCC>
